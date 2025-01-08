@@ -1,8 +1,19 @@
+"use server";
+
+import bcrypt from "bcrypt";
 import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX, PASSWORD_REGEX_ERROR } from "@/lib/constants";
 import db from "@/lib/db";
 import { z } from "zod";
 
 const checkUsername = (username: string) => !username.includes("potato");
+const checkPasswords = ({
+    password,
+    confirm_password,
+}: {
+    password: string;
+    confirm_password: string;
+}) => password === confirm_password;
+
 const checkUniqueUsername = async (username: string) => {
     const user = await db.user.findUnique({
         where: {
@@ -54,10 +65,10 @@ const formSchema = z
             .min(PASSWORD_MIN_LENGTH)
             .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
     })
-    // .refine(checkPasswords, {
-    //     message: "Both passwords should be the same!",
-    //     path: ["confirm_password"],
-    // })
+    .refine(checkPasswords, {
+        message: "Both passwords should be the same!",
+        path: ["confirm_password"],
+    })
     .superRefine(({ password, confirm_password }, ctx) => {
         if (password !== confirm_password) {
             ctx.addIssue({
@@ -75,7 +86,9 @@ export async function createAccount(prevState: any, formData: FormData) {
         password: formData.get("password"),
         confirm_password: formData.get("confirm_password"),
     };
+
     const result = await formSchema.safeParseAsync(data);
+
     if (!result.success) {
         return result.error.flatten();
     } else {
