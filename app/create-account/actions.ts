@@ -4,6 +4,10 @@ import bcrypt from "bcrypt";
 import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX, PASSWORD_REGEX_ERROR } from "@/lib/constants";
 import db from "@/lib/db";
 import { z } from "zod";
+import { getIronSession } from "iron-session";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import getSession from "@/lib/session";
 
 const checkUsername = (username: string) => !username.includes("potato");
 const checkPasswords = ({
@@ -92,5 +96,19 @@ export async function createAccount(prevState: any, formData: FormData) {
     if (!result.success) {
         return result.error.flatten();
     } else {
+        //hash password
+        const hashedPassword = await bcrypt.hash(result.data.password, 12);
+        //해싱된 비밀번호 저장
+        const user = await db.user.create({
+            data: {
+                username: result.data.username,
+                email: result.data.email,
+                password: hashedPassword,
+            },
+        });
+        const session = await getSession();
+        session.id = user.id;
+        await session.save();
+        redirect("/profile");
     }
 }
