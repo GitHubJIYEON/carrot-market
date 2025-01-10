@@ -7,7 +7,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import getSession from "@/lib/session";
 
-// const checkUsername = (username: string) => !username.includes("potato");
+const checkUsername = (username: string) => !username.includes("potato");
 const checkPasswords = ({
     password,
     confirm_password,
@@ -15,34 +15,6 @@ const checkPasswords = ({
     password: string;
     confirm_password: string;
 }) => password === confirm_password;
-
-const checkUniqueUsername = async (username: string) => {
-    const user = await db.user.findUnique({
-        where: {
-            username,
-        },
-        select: {
-            id: true,
-        },
-    });
-    return !Boolean(user);
-    // if (user) {
-    //     return false;
-    // } else {
-    //     return true;
-    // }
-};
-const checkUniqueEmail = async (email: string) => {
-    const user = await db.user.findUnique({
-        where: {
-            email,
-        },
-        select: {
-            id: true,
-        },
-    });
-    return Boolean(user) === false;
-};
 
 const formSchema = z
     .object({
@@ -53,14 +25,9 @@ const formSchema = z
             })
             .trim()
             .toLowerCase()
-            // .transform((username) => `${username}`)
-            // .refine(checkUsername, "No potatoes allowed!")
-            .refine(checkUniqueUsername, "This username is already taken"),
-        email: z
-            .string()
-            .email()
-            .toLowerCase()
-            .refine(checkUniqueEmail, "There is an account already registered with that email"),
+            .trim()
+            .refine(checkUsername, "No potatoes allowed!"),
+        email: z.string().email().toLowerCase(),
         password: z.string().min(PASSWORD_MIN_LENGTH).regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
         confirm_password: z
             .string()
@@ -71,13 +38,45 @@ const formSchema = z
         message: "Both passwords should be the same!",
         path: ["confirm_password"],
     })
-    .superRefine(({ password, confirm_password }, ctx) => {
-        if (password !== confirm_password) {
+
+    // 검증과정중 db를 여러번 호출하는경우,
+    // 한가지 값만 검증을 통과하지 못하면 다른 검증은 실행하지도 않게 종료하는 방법 superRefine
+    .superRefine(async ({ username }, ctx) => {
+        const user = await db.user.findUnique({
+            where: {
+                username,
+            },
+            select: {
+                id: true,
+            },
+        });
+        if (user) {
             ctx.addIssue({
                 code: "custom",
-                message: "Two passwords should be equal",
-                path: ["confirm_password"],
+                message: "This username is already taken",
+                path: ["username"],
+                fatal: true,
             });
+            return z.NEVER;
+        }
+    })
+    .superRefine(async ({ email }, ctx) => {
+        const user = await db.user.findUnique({
+            where: {
+                email,
+            },
+            select: {
+                id: true,
+            },
+        });
+        if (user) {
+            ctx.addIssue({
+                code: "custom",
+                message: "This email is already taken",
+                path: ["email"],
+                fatal: true,
+            });
+            return z.NEVER;
         }
     });
 
