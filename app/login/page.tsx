@@ -9,7 +9,7 @@ import { useActionState } from "react";
 //
 export default function LogIn() {
     // const [state, dispatch] = useFormState(logIn, null);
-    const [state, dispatch, isPending] = useActionState(logIn, null);
+    const [state, dispatch] = useActionState(logIn, null);
 
     return (
         <div className="flex flex-col gap-10 py-8 px-6">
@@ -30,7 +30,6 @@ export default function LogIn() {
                     type="password"
                     placeholder="Password"
                     required
-                    disabled={isPending}
                     minLength={PASSWORD_MIN_LENGTH}
                     errors={state?.fieldErrors.password}
                 />

@@ -4,12 +4,10 @@ import bcrypt from "bcrypt";
 import { PASSWORD_MIN_LENGTH, PASSWORD_REGEX, PASSWORD_REGEX_ERROR } from "@/lib/constants";
 import db from "@/lib/db";
 import { z } from "zod";
-import { getIronSession } from "iron-session";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import getSession from "@/lib/session";
 
-const checkUsername = (username: string) => !username.includes("potato");
+// const checkUsername = (username: string) => !username.includes("potato");
 const checkPasswords = ({
     password,
     confirm_password,
@@ -56,7 +54,7 @@ const formSchema = z
             .trim()
             .toLowerCase()
             // .transform((username) => `${username}`)
-            .refine(checkUsername, "No potatoes allowed!")
+            // .refine(checkUsername, "No potatoes allowed!")
             .refine(checkUniqueUsername, "This username is already taken"),
         email: z
             .string()
