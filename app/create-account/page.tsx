@@ -8,6 +8,8 @@ import { createAccount } from "./actions";
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 import { useActionState } from "react";
 
+// 1. 사용자 input 유효성 검사 -> 기존 정보 일치 여부, 비밀번호 일치 확인 -> 
+
 export default function CreateAccount() {
     // const [state, dispatch] = useFormState(createAccount, null);
     const [state, dispatch, isPending] = useActionState(createAccount, null);
