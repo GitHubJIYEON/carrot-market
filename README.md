@@ -35,6 +35,6 @@ npm run dev
 📦 lib                       # 유틸리티 함수 및 API 호출 등의 로직 관리
 📦 prisma                    # 데이터베이스 스키마 및 Prisma ORM 관련 설정
 📦 public                    # 정적 파일 (이미지, 아이콘 등) 
-
+...
 ```
 
